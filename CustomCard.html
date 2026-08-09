@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Bingo Card</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="card-page">
+    <main class="card-container">
+        <header class="page-header">
+            <h1>Create Your Own Card</h1>
+            <p>Create a completely custom 25-square bingo card.</p>
+        </header>
+
+        <form id="customForm">
+            <div class="controls">
+                <a href="index.html" class="btn">← Go Back</a>
+                <button type="submit" class="btn btn-primary">Generate Card</button>
+            </div>
+
+            <div class="custom-grid">
+                <input class="custom-input" type="text" placeholder="Square 1" maxlength="100">
+                <input class="custom-input" type="text" placeholder="Square 2" maxlength="100">
+                <input class="custom-input" type="text" placeholder="Square 3" maxlength="100">
+                <input class="custom-input" type="text" placeholder="Square 4" maxlength="100">
+                <input class="custom-input" type="text" placeholder="Square 5" maxlength="100">
+                <input class="custom-input" type="text" placeholder="Square 6" maxlength="100">
+                <input class="custom-input" type="text" placeholder="Square 7" maxlength="100">
+                <input class="custom-input" type="text" placeholder="Square 8" maxlength="100">
+                <input class="custom-input" type="text" placeholder="Square 9" maxlength="100">
+                <input class="custom-input" type="text" placeholder="Square 10" maxlength="100">
+                <input class="custom-input" type="text" placeholder="Square 11" maxlength="100">
+                <input class="custom-input" type="text" placeholder="Square 12" maxlength="100">
+                <input class="custom-input" type="text" placeholder="Square 13" maxlength="100">
+                <input class="custom-input" type="text" placeholder="Square 14" maxlength="100">
+                <input class="custom-input" type="text" placeholder="Square 15" maxlength="100">
+                <input class="custom-input" type="text" placeholder="Square 16" maxlength="100">
+                <input class="custom-input" type="text" placeholder="Square 17" maxlength="100">
+                <input class="custom-input" type="text" placeholder="Square 18" maxlength="100">
+                <input class="custom-input" type="text" placeholder="Square 19" maxlength="100">
+                <input class="custom-input" type="text" placeholder="Square 20" maxlength="100">
+                <input class="custom-input" type="text" placeholder="Square 21" maxlength="100">
+                <input class="custom-input" type="text" placeholder="Square 22" maxlength="100">
+                <input class="custom-input" type="text" placeholder="Square 23" maxlength="100">
+                <input class="custom-input" type="text" placeholder="Square 24" maxlength="100">
+                <input class="custom-input" type="text" placeholder="Square 25" maxlength="100">
+            </div>
+        </form>
+
+        <section id="generatedArea" class="hidden">
+            <div class="controls">
+                <a href="index.html" class="btn">← Go Back</a>
+                <button id="editCard" class="btn">✏️ Edit Card</button>
+                <button id="shareButton" class="btn">📋 Share Card</button>
+                <button id="resetButton" class="btn btn-danger">Reset Card</button>
+            </div>
+
+            <div class="bingo-wrapper">
+                <div id="generatedCard" class="bingo-card"></div>
+            </div>
+
+            <div class="card-status">
+                Click squares to mark them.
+                <div class="bingo-message"></div>
+            </div>
+        </section>
+    </main>
+
+    <script src="bingo-data.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
