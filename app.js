@@ -3,6 +3,7 @@ const STORAGE_KEYS = {
     randomMarked: "wowBingo_randomMarked",
     chooseCard: "wowBingo_chooseCard",
     chooseMarked: "wowBingo_chooseMarked",
+    chooseEnabled: "wowBingo_chooseEnabled",
     customCard: "wowBingo_customCard",
     customMarked: "wowBingo_customMarked"
 };
@@ -20,14 +21,19 @@ function shuffle(array) {
 
 function getRandomItems(items, amount) {
     if (items.length < amount) {
-        throw new Error(`Not enough bingo items. Need ${amount}, only have ${items.length}.`);
+        throw new Error(
+            `Not enough bingo items. Need ${amount}, only have ${items.length}.`
+        );
     }
 
     return shuffle(items).slice(0, amount);
 }
 
 function createCard() {
-    const availableItems = bingoItems.filter(item => item !== "LURA DIES");
+    const availableItems = bingoItems.filter(
+        item => item.trim().toLowerCase() !== "lura dies"
+    );
+
     const shuffled = shuffle(availableItems);
     const card = [];
 
@@ -47,15 +53,16 @@ function createCardFromItems(items) {
     const seen = new Set();
 
     items.forEach(item => {
-        const normalized = item.trim().toLowerCase();
+        const trimmed = item.trim();
+        const normalized = trimmed.toLowerCase();
 
         if (
-            item.trim() !== "" &&
+            trimmed !== "" &&
             normalized !== "lura dies" &&
             !seen.has(normalized)
         ) {
             seen.add(normalized);
-            uniqueItems.push(item.trim());
+            uniqueItems.push(trimmed);
         }
     });
 
@@ -79,13 +86,23 @@ function createCardFromItems(items) {
 }
 
 function isValidCard(card) {
+    if (!Array.isArray(card) || card.length !== 25) {
+        return false;
+    }
+
+    if (card[12] !== "LURA DIES") {
+        return false;
+    }
+
+    const normalized = card.map(item =>
+        typeof item === "string"
+            ? item.trim().toLowerCase()
+            : ""
+    );
+
     return (
-        Array.isArray(card) &&
-        card.length === 25 &&
-        card[12] === "LURA DIES" &&
-        new Set(
-            card.map(item => item.trim().toLowerCase())
-        ).size === 25
+        normalized.every(item => item !== "") &&
+        new Set(normalized).size === 25
     );
 }
 
@@ -205,33 +222,37 @@ function initRandomCard() {
         STORAGE_KEYS.randomMarked
     );
 
-    document.getElementById("rerollButton")?.addEventListener("click", () => {
-        const newCard = createCard();
-        const newMarked = [];
+    document
+        .getElementById("rerollButton")
+        ?.addEventListener("click", () => {
+            const newCard = createCard();
+            const newMarked = [];
 
-        saveJSON(STORAGE_KEYS.randomCard, newCard);
-        saveJSON(STORAGE_KEYS.randomMarked, newMarked);
+            saveJSON(STORAGE_KEYS.randomCard, newCard);
+            saveJSON(STORAGE_KEYS.randomMarked, newMarked);
 
-        renderCard(
-            newCard,
-            newMarked,
-            cardElement,
-            STORAGE_KEYS.randomMarked
-        );
-    });
+            renderCard(
+                newCard,
+                newMarked,
+                cardElement,
+                STORAGE_KEYS.randomMarked
+            );
+        });
 
-    document.getElementById("resetButton")?.addEventListener("click", () => {
-        if (!confirm("Reset this card?")) {
-            return;
-        }
+    document
+        .getElementById("resetButton")
+        ?.addEventListener("click", () => {
+            if (!confirm("Reset this card?")) {
+                return;
+            }
 
-        resetStorage(
-            STORAGE_KEYS.randomCard,
-            STORAGE_KEYS.randomMarked
-        );
+            resetStorage(
+                STORAGE_KEYS.randomCard,
+                STORAGE_KEYS.randomMarked
+            );
 
-        location.reload();
-    });
+            location.reload();
+        });
 
     initShareButton();
 }
@@ -244,32 +265,109 @@ function initChooseCard() {
         return;
     }
 
-    let savedCard = loadJSON(STORAGE_KEYS.chooseCard, []);
+    const enabled = loadJSON(
+        STORAGE_KEYS.chooseEnabled,
+        false
+    );
 
-    if (
-        Array.isArray(savedCard) &&
-        savedCard.length === 25 &&
-        savedCard[12] === "LURA DIES"
-    ) {
-        savedCard = savedCard.filter(
-            (item, index) => index !== 12
-        );
-    }
-    let enabled = loadJSON("wowBingo_chooseEnabled", false);
+    let savedCard = loadJSON(
+        STORAGE_KEYS.chooseCard,
+        []
+    );
 
     if (!Array.isArray(savedCard)) {
         savedCard = [];
     }
 
-    if (savedCard.length === 25 && savedCard[12] === "LURA DIES") {
-        savedCard = savedCard.filter((item, index) => index !== 12);
-    }
-
-    savedCard = savedCard.filter(
-        item => item.trim().toLowerCase() !== "lura dies"
+    const params = new URLSearchParams(
+        window.location.search
     );
 
-    savedCard = savedCard.slice(0, 24);
+    if (enabled && isValidCard(savedCard)) {
+        showEnabledChooseCard(savedCard);
+        return;
+    }
+
+    savedCard = savedCard
+        .filter(item => {
+            if (typeof item !== "string") {
+                return false;
+            }
+
+            return item.trim().toLowerCase() !== "lura dies";
+        })
+        .slice(0, 24);
+
+    function saveBuilderCard() {
+        saveJSON(
+            STORAGE_KEYS.chooseCard,
+            savedCard
+        );
+    }
+
+    function getItemIndexForSquare(squareIndex) {
+        if (squareIndex === 12) {
+            return null;
+        }
+
+        return squareIndex > 12
+            ? squareIndex - 1
+            : squareIndex;
+    }
+
+    function removeItem(item) {
+        const index = savedCard.findIndex(
+            value =>
+                value.trim().toLowerCase() ===
+                item.trim().toLowerCase()
+        );
+
+        if (index !== -1) {
+            savedCard.splice(index, 1);
+        }
+
+        saveBuilderCard();
+        renderSetupCard();
+        renderAvailableItems();
+        updateSelectionCount();
+    }
+
+    function placeItem(item, squareIndex) {
+        if (!item) {
+            return;
+        }
+
+        if (squareIndex === 12) {
+            return;
+        }
+
+        const alreadyUsed = savedCard.some(
+            value =>
+                value.trim().toLowerCase() ===
+                item.trim().toLowerCase()
+        );
+
+        if (alreadyUsed) {
+            return;
+        }
+
+        const itemIndex = getItemIndexForSquare(squareIndex);
+
+        if (itemIndex === null) {
+            return;
+        }
+
+        if (savedCard.length >= 24) {
+            return;
+        }
+
+        savedCard.splice(itemIndex, 0, item);
+
+        saveBuilderCard();
+        renderSetupCard();
+        renderAvailableItems();
+        updateSelectionCount();
+    }
 
     function renderSetupCard() {
         setupCard.innerHTML = "";
@@ -282,80 +380,95 @@ function initChooseCard() {
             if (i === 12) {
                 square.classList.add("center-square");
                 square.textContent = "LURA DIES";
+                setupCard.appendChild(square);
+                continue;
+            }
+
+            const itemIndex = getItemIndexForSquare(i);
+            const item = savedCard[itemIndex];
+
+            if (item) {
+                square.classList.add("filled");
+                square.textContent = item;
+                square.draggable = true;
+                square.dataset.item = item;
+
+                square.addEventListener(
+                    "dragstart",
+                    event => {
+                        event.dataTransfer.setData(
+                            "text/plain",
+                            item
+                        );
+
+                        event.dataTransfer.effectAllowed =
+                            "move";
+
+                        square.classList.add(
+                            "dragging"
+                        );
+                    }
+                );
+
+                square.addEventListener(
+                    "dragend",
+                    () => {
+                        square.classList.remove(
+                            "dragging"
+                        );
+                    }
+                );
+
+                square.addEventListener(
+                    "click",
+                    () => {
+                        removeItem(item);
+                    }
+                );
             } else {
-                const itemIndex = i > 12 ? i - 1 : i;
-                const item = savedCard[itemIndex];
+                square.classList.add("empty");
+                square.textContent = "Drop Here";
 
-                if (item) {
-                    square.classList.add("filled");
-                    square.textContent = item;
-                    square.dataset.index = itemIndex;
+                square.addEventListener(
+                    "dragover",
+                    event => {
+                        event.preventDefault();
 
-                    if (!enabled) {
-                        square.addEventListener("click", () => {
-                            const index = Number(square.dataset.index);
+                        event.dataTransfer.dropEffect =
+                            "move";
 
-                            savedCard.splice(index, 1);
+                        square.classList.add(
+                            "drop-hover"
+                        );
+                    }
+                );
 
-                            saveJSON(
-                                STORAGE_KEYS.chooseCard,
-                                savedCard
+                square.addEventListener(
+                    "dragleave",
+                    () => {
+                        square.classList.remove(
+                            "drop-hover"
+                        );
+                    }
+                );
+
+                square.addEventListener(
+                    "drop",
+                    event => {
+                        event.preventDefault();
+
+                        square.classList.remove(
+                            "drop-hover"
+                        );
+
+                        const item =
+                            event.dataTransfer.getData(
+                                "text/plain"
                             );
 
-                            renderSetupCard();
-                            renderAvailableItems();
-                            updateSelectionCount();
-                        });
+                        placeItem(item, i);
                     }
-                } else {
-                    square.textContent = "Drop Here";
-                    square.dataset.index = i;
-
-                    if (!enabled) {
-                        square.addEventListener("dragover", event => {
-                            event.preventDefault();
-                            square.classList.add("drop-hover");
-                        });
-
-                        square.addEventListener("dragleave", () => {
-                            square.classList.remove("drop-hover");
-                        });
-
-                        square.addEventListener("drop", event => {
-                            event.preventDefault();
-
-                            square.classList.remove("drop-hover");
-
-                            const item = event.dataTransfer.getData("text/plain");
-
-                            if (!item) {
-                                return;
-                            }
-
-                            if (
-                                savedCard.some(
-                                    value =>
-                                        value.toLowerCase() === item.toLowerCase()
-                                )
-                            ) {
-                                return;
-                            }
-
-                            const position = i > 12 ? i - 1 : i;
-
-                            savedCard.splice(position, 0, item);
-
-                            saveJSON(
-                                STORAGE_KEYS.chooseCard,
-                                savedCard
-                            );
-
-                            renderSetupCard();
-                            renderAvailableItems();
-                            updateSelectionCount();
-                        });
-                    }
-                }
+                );
             }
 
             setupCard.appendChild(square);
@@ -368,31 +481,40 @@ function initChooseCard() {
         bingoItems
             .filter(
                 item =>
-                    item.trim().toLowerCase() !== "lura dies"
+                    item.trim().toLowerCase() !==
+                    "lura dies"
             )
             .forEach(item => {
-                const div = document.createElement("div");
+                const div =
+                    document.createElement("div");
 
                 div.className = "drag-item";
                 div.textContent = item;
-                div.draggable = !enabled;
 
                 const used = savedCard.some(
                     value =>
-                        value.toLowerCase() === item.toLowerCase()
+                        value.trim().toLowerCase() ===
+                        item.trim().toLowerCase()
                 );
 
                 if (used) {
                     div.classList.add("used");
-                }
+                    div.draggable = false;
+                } else {
+                    div.draggable = true;
 
-                if (!enabled) {
-                    div.addEventListener("dragstart", event => {
-                        event.dataTransfer.setData(
-                            "text/plain",
-                            item
-                        );
-                    });
+                    div.addEventListener(
+                        "dragstart",
+                        event => {
+                            event.dataTransfer.setData(
+                                "text/plain",
+                                item
+                            );
+
+                            event.dataTransfer.effectAllowed =
+                                "copy";
+                        }
+                    );
                 }
 
                 list.appendChild(div);
@@ -400,19 +522,27 @@ function initChooseCard() {
     }
 
     function updateSelectionCount() {
-        const count = document.getElementById("selectionCount");
-        const enableButton = document.getElementById("enableCardButton");
+        const count =
+            document.getElementById(
+                "selectionCount"
+            );
+
+        const enableButton =
+            document.getElementById(
+                "enableCardButton"
+            );
 
         if (count) {
-            count.textContent = `${savedCard.length} / 24 Squares Placed`;
+            count.textContent =
+                `${savedCard.length} / 24 Squares Placed`;
         }
 
         if (enableButton) {
             enableButton.disabled =
-                savedCard.length !== 24 || enabled;
+                savedCard.length !== 24;
 
             enableButton.textContent =
-                enabled ? "Card Enabled" : "Enable Card";
+                "Enable Card";
         }
     }
 
@@ -424,18 +554,21 @@ function initChooseCard() {
         .getElementById("enableCardButton")
         ?.addEventListener("click", () => {
             if (savedCard.length !== 24) {
-                alert("Please place all 24 squares first.");
+                alert(
+                    "Please place all 24 squares first."
+                );
                 return;
             }
 
-            const card = createCardFromItems(savedCard);
+            const card =
+                createCardFromItems(savedCard);
 
             if (!card) {
-                alert("Your card contains duplicate squares.");
+                alert(
+                    "Your card contains duplicate squares."
+                );
                 return;
             }
-
-            enabled = true;
 
             saveJSON(
                 STORAGE_KEYS.chooseCard,
@@ -448,68 +581,84 @@ function initChooseCard() {
             );
 
             saveJSON(
-                "wowBingo_chooseEnabled",
+                STORAGE_KEYS.chooseEnabled,
                 true
             );
 
-            window.location.href = "ChooseCard.html?card=1";
+            window.location.href =
+                "ChooseCard.html?card=1";
         });
-
-    const params = new URLSearchParams(
-        window.location.search
-    );
 
     if (
         params.get("card") === "1" &&
         isValidCard(savedCard)
     ) {
-        document
-            .getElementById("selectionArea")
-            ?.classList.add("hidden");
-
-        document
-            .getElementById("generatedArea")
-            ?.classList.remove("hidden");
-
-        const marked = loadJSON(
-            STORAGE_KEYS.chooseMarked,
-            []
-        );
-
-        renderCard(
-            savedCard,
-            marked,
-            document.getElementById("generatedCard"),
-            STORAGE_KEYS.chooseMarked
-        );
-
-        initGeneratedCardControls();
+        showEnabledChooseCard(savedCard);
     }
 }
 
+function showEnabledChooseCard(card) {
+    document
+        .getElementById("selectionArea")
+        ?.classList.add("hidden");
+
+    document
+        .getElementById("generatedArea")
+        ?.classList.remove("hidden");
+
+    const marked = loadJSON(
+        STORAGE_KEYS.chooseMarked,
+        []
+    );
+
+    renderCard(
+        card,
+        marked,
+        document.getElementById("generatedCard"),
+        STORAGE_KEYS.chooseMarked
+    );
+
+    initGeneratedCardControls();
+}
+
 function initGeneratedCardControls() {
-    document.getElementById("backToChoose")?.addEventListener("click", () => {
-        window.location.href = "ChooseCard.html";
-    });
+    document
+        .getElementById("backToChoose")
+        ?.addEventListener("click", () => {
+            window.location.href =
+                "ChooseCard.html?card=1";
+        });
 
-    document.getElementById("resetButton")?.addEventListener("click", () => {
-        if (!confirm("Reset your selected card?")) {
-            return;
-        }
+    document
+        .getElementById("resetButton")
+        ?.addEventListener("click", () => {
+            if (
+                !confirm(
+                    "Reset your selected card?"
+                )
+            ) {
+                return;
+            }
 
-        resetStorage(
-            STORAGE_KEYS.chooseCard,
-            STORAGE_KEYS.chooseMarked
-        );
+            resetStorage(
+                STORAGE_KEYS.chooseCard,
+                STORAGE_KEYS.chooseMarked
+            );
 
-        window.location.href = "ChooseCard.html";
-    });
+            localStorage.removeItem(
+                STORAGE_KEYS.chooseEnabled
+            );
+
+            window.location.href =
+                "ChooseCard.html";
+        });
 
     initShareButton();
 }
 
 function initCustomCard() {
-    const form = document.getElementById("customForm");
+    const form =
+        document.getElementById("customForm");
 
     if (!form) {
         return;
@@ -524,108 +673,135 @@ function initCustomCard() {
         []
     );
 
-    if (savedCard.length === 25 && savedCard[12] === "LURA DIES") {
-        let inputIndex = 0;
+    inputs.forEach((input, index) => {
+        if (index === 12) {
+            input.value = "LURA DIES";
+            input.disabled = true;
+            input.placeholder = "LURA DIES";
+        }
+    });
+
+    if (
+        Array.isArray(savedCard) &&
+        savedCard.length === 25 &&
+        savedCard[12] === "LURA DIES"
+    ) {
+        let itemIndex = 0;
 
         inputs.forEach((input, index) => {
             if (index === 12) {
-                input.value = "LURA DIES";
-                input.disabled = true;
-                input.placeholder = "LURA DIES";
-            } else {
-                if (savedCard[inputIndex]) {
-                    input.value = savedCard[inputIndex];
-                }
+                return;
+            }
 
-                inputIndex++;
+            if (savedCard[itemIndex]) {
+                input.value =
+                    savedCard[itemIndex];
             }
-        });
-    } else {
-        inputs.forEach((input, index) => {
-            if (index === 12) {
-                input.value = "LURA DIES";
-                input.disabled = true;
-                input.placeholder = "LURA DIES";
-            }
+
+            itemIndex++;
         });
     }
 
-    form.addEventListener("submit", event => {
-        event.preventDefault();
+    form.addEventListener(
+        "submit",
+        event => {
+            event.preventDefault();
 
-        const values = inputs
-            .filter((input, index) => index !== 12)
-            .map(input => input.value.trim());
+            const values = inputs
+                .filter(
+                    (input, index) =>
+                        index !== 12
+                )
+                .map(input =>
+                    input.value.trim()
+                );
 
-        if (values.some(value => value === "")) {
-            alert("Please fill in all 24 custom squares.");
-            return;
-        }
+            if (
+                values.some(
+                    value => value === ""
+                )
+            ) {
+                alert(
+                    "Please fill in all 24 custom squares."
+                );
+                return;
+            }
 
-        const normalized = values.map(
-            value => value.toLowerCase()
-        );
+            const normalized =
+                values.map(value =>
+                    value.toLowerCase()
+                );
 
-        const hasDuplicates = normalized.some(
-            (value, index) => normalized.indexOf(value) !== index
-        );
+            const hasDuplicates =
+                normalized.some(
+                    (value, index) =>
+                        normalized.indexOf(
+                            value
+                        ) !== index
+                );
 
-        if (hasDuplicates) {
-            alert("Your card contains duplicate squares.");
-            return;
-        }
+            if (hasDuplicates) {
+                alert(
+                    "Your card contains duplicate squares."
+                );
+                return;
+            }
 
-        const card = createCardFromItems(values);
+            const card =
+                createCardFromItems(values);
 
-        if (!card) {
-            alert("Your card contains duplicate squares.");
-            return;
-        }
+            if (!card) {
+                alert(
+                    "Your card contains duplicate squares."
+                );
+                return;
+            }
 
-        saveJSON(
-            STORAGE_KEYS.customCard,
-            card
-        );
-
-        saveJSON(
-            STORAGE_KEYS.customMarked,
-            []
-        );
-
-        window.location.href = "CustomCard.html?card=1";
-    });
-
-    const params = new URLSearchParams(window.location.search);
-
-    if (params.get("card") === "1") {
-        let generatedCard = loadJSON(
-            STORAGE_KEYS.customCard,
-            []
-        );
-
-        if (!isValidCard(generatedCard)) {
-            const items = generatedCard.filter(
-                item => item.trim().toLowerCase() !== "lura dies"
+            saveJSON(
+                STORAGE_KEYS.customCard,
+                card
             );
 
-            generatedCard = createCardFromItems(items);
+            saveJSON(
+                STORAGE_KEYS.customMarked,
+                []
+            );
 
-            if (generatedCard) {
-                saveJSON(
-                    STORAGE_KEYS.customCard,
-                    generatedCard
-                );
-            }
+            window.location.href =
+                "CustomCard.html?card=1";
         }
+    );
 
-        if (generatedCard && isValidCard(generatedCard)) {
+    const params =
+        new URLSearchParams(
+            window.location.search
+        );
+
+    if (params.get("card") === "1") {
+        const generatedCard =
+            loadJSON(
+                STORAGE_KEYS.customCard,
+                []
+            );
+
+        if (isValidCard(generatedCard)) {
             form.classList.add("hidden");
-            document.getElementById("generatedArea")?.classList.remove("hidden");
+
+            document
+                .getElementById(
+                    "generatedArea"
+                )
+                ?.classList.remove("hidden");
 
             renderCard(
                 generatedCard,
-                loadJSON(STORAGE_KEYS.customMarked, []),
-                document.getElementById("generatedCard"),
+                loadJSON(
+                    STORAGE_KEYS.customMarked,
+                    []
+                ),
+                document.getElementById(
+                    "generatedCard"
+                ),
                 STORAGE_KEYS.customMarked
             );
 
@@ -635,44 +811,76 @@ function initCustomCard() {
 }
 
 function initCustomGeneratedControls() {
-    document.getElementById("editCard")?.addEventListener("click", () => {
-        window.location.href = "CustomCard.html";
-    });
-
-    document.getElementById("resetButton")?.addEventListener("click", () => {
-        if (!confirm("Reset your custom card?")) {
-            return;
-        }
-
-        resetStorage(
-            STORAGE_KEYS.customCard,
-            STORAGE_KEYS.customMarked
+    document
+        .getElementById("editCard")
+        ?.addEventListener(
+            "click",
+            () => {
+                window.location.href =
+                    "CustomCard.html";
+            }
         );
 
-        window.location.href = "CustomCard.html";
-    });
+    document
+        .getElementById("resetButton")
+        ?.addEventListener(
+            "click",
+            () => {
+                if (
+                    !confirm(
+                        "Reset your custom card?"
+                    )
+                ) {
+                    return;
+                }
+
+                resetStorage(
+                    STORAGE_KEYS.customCard,
+                    STORAGE_KEYS.customMarked
+                );
+
+                window.location.href =
+                    "CustomCard.html";
+            }
+        );
 
     initShareButton();
 }
 
 async function shareCard() {
-    const card = document.querySelector(".bingo-wrapper");
+    const card =
+        document.querySelector(
+            ".bingo-wrapper"
+        );
 
-    if (!card || typeof html2canvas === "undefined") {
-        alert("Couldn't create the card image.");
+    if (
+        !card ||
+        typeof html2canvas === "undefined"
+    ) {
+        alert(
+            "Couldn't create the card image."
+        );
         return;
     }
 
     try {
-        const canvas = await html2canvas(card, {
-            backgroundColor: "#090b10",
-            scale: 2
-        });
+        const canvas =
+            await html2canvas(card, {
+                backgroundColor: "#090b10",
+                scale: 2
+            });
 
-        if (navigator.clipboard && window.ClipboardItem) {
-            const blob = await new Promise(resolve =>
-                canvas.toBlob(resolve, "image/png")
-            );
+        if (
+            navigator.clipboard &&
+            window.ClipboardItem
+        ) {
+            const blob =
+                await new Promise(resolve =>
+                    canvas.toBlob(
+                        resolve,
+                        "image/png"
+                    )
+                );
 
             await navigator.clipboard.write([
                 new ClipboardItem({
@@ -680,32 +888,48 @@ async function shareCard() {
                 })
             ]);
 
-            alert("Card image copied to clipboard!");
+            alert(
+                "Card image copied to clipboard!"
+            );
         } else {
-            const link = document.createElement("a");
+            const link =
+                document.createElement("a");
 
-            link.download = "wow-bingo-card.png";
-            link.href = canvas.toDataURL("image/png");
+            link.download =
+                "wow-bingo-card.png";
+
+            link.href =
+                canvas.toDataURL("image/png");
 
             link.click();
 
-            alert("Your browser doesn't support copying images directly. The card was downloaded instead.");
+            alert(
+                "Your browser doesn't support copying images directly. The card was downloaded instead."
+            );
         }
     } catch (error) {
         console.error(error);
-        alert("Couldn't copy the card image.");
+
+        alert(
+            "Couldn't copy the card image."
+        );
     }
 }
 
 function initShareButton() {
-    document.getElementById("shareButton")?.addEventListener(
-        "click",
-        shareCard
-    );
+    document
+        .getElementById("shareButton")
+        ?.addEventListener(
+            "click",
+            shareCard
+        );
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    initRandomCard();
-    initChooseCard();
-    initCustomCard();
-});
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+        initRandomCard();
+        initChooseCard();
+        initCustomCard();
+    }
+);
