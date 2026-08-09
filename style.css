@@ -201,7 +201,7 @@ button {
     content: "";
     position: absolute;
     inset: 0;
-    background-image: url("images/boss.jpg");
+    background-image: url("boss.jpg");
     background-size: cover;
     background-position: center;
     opacity: 0.25;
