@@ -1103,7 +1103,7 @@ function initCustomGeneratedControls() {
 }
 
 async function shareCard() {
-    const card = document.querySelector("#generatedArea .bingo-wrapper");
+    const card = document.querySelector(".bingo-wrapper");
 
     if (!card || typeof html2canvas === "undefined") {
         alert("Couldn't create the card image.");
