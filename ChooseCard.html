@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choose Your Bingo Card</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="card-page">
+    <main class="card-container">
+        <header class="page-header">
+            <h1>Choose Your 25</h1>
+            <p>Pick 25 squares from the available bingo possibilities.</p>
+        </header>
+
+        <section id="selectionArea">
+            <div class="controls">
+                <a href="index.html" class="btn">← Go Back</a>
+                <button id="generateButton" class="btn btn-primary" disabled>Generate Card</button>
+            </div>
+
+            <div class="selection-count" id="selectionCount">0 / 25 selected</div>
+
+            <div class="selection-container">
+                <div id="itemList" class="item-list"></div>
+            </div>
+        </section>
+
+        <section id="generatedArea" class="hidden">
+            <div class="controls">
+                <a href="index.html" class="btn">← Go Back</a>
+                <button id="backToChoose" class="btn">✏️ Change Squares</button>
+                <button id="shareButton" class="btn">📋 Share Card</button>
+                <button id="resetButton" class="btn btn-danger">Reset Card</button>
+            </div>
+
+            <div class="bingo-wrapper">
+                <div id="generatedCard" class="bingo-card"></div>
+            </div>
+
+            <div class="card-status">
+                Click squares to mark them.
+                <div class="bingo-message"></div>
+            </div>
+        </section>
+    </main>
+
+    <script src="bingo-data.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
