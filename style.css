@@ -3,16 +3,15 @@
 }
 
 :root {
-    --bg: #0d0f14;
-    --bg-secondary: #151923;
-    --card: #1b202c;
-    --card-hover: #252c3b;
-    --gold: #d8a83e;
-    --gold-light: #f1cb68;
+    --bg: #080c14;
+    --bg-secondary: #101827;
+    --card: #141c2b;
+    --card-hover: #1b2639;
+    --raid-blue: #163b61;
+    --raid-blue-light: #245b8f;
     --text: #f4f4f4;
     --muted: #9da4b3;
-    --border: #343b4c;
-    --green: #45c878;
+    --border: #29384d;
     --red: #d95757;
 }
 
@@ -24,7 +23,7 @@ body {
 }
 
 body {
-    background: radial-gradient(circle at top, #1a2030 0%, var(--bg) 55%);
+    background: radial-gradient(circle at top, #141f33 0%, var(--bg) 55%);
     color: var(--text);
     font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
@@ -60,7 +59,7 @@ button {
 .site-header h1 {
     margin: 0 0 15px;
     font-size: clamp(2rem, 5vw, 3.5rem);
-    color: var(--gold-light);
+    color: #8ab8e3;
     letter-spacing: -1px;
 }
 
@@ -91,7 +90,7 @@ button {
 .mode-card:hover {
     transform: translateY(-5px);
     background: var(--card-hover);
-    border-color: var(--gold);
+    border-color: var(--raid-blue-light);
 }
 
 .mode-icon {
@@ -101,7 +100,7 @@ button {
 
 .mode-card h2 {
     margin: 0 0 12px;
-    color: var(--gold-light);
+    color: #8ab8e3;
 }
 
 .mode-card p {
@@ -116,8 +115,9 @@ button {
     padding: 12px 18px;
     border-radius: 8px;
     text-align: center;
-    background: var(--gold);
-    color: #111;
+    background: var(--raid-blue);
+    border: 1px solid var(--raid-blue-light);
+    color: #ffffff;
     font-weight: 700;
 }
 
@@ -137,7 +137,7 @@ button {
 }
 
 .page-header h1 {
-    color: var(--gold-light);
+    color: #8ab8e3;
     margin-bottom: 8px;
 }
 
@@ -166,21 +166,21 @@ button {
 
 .btn:hover {
     background: var(--card-hover);
-    border-color: var(--gold);
+    border-color: var(--raid-blue-light);
 }
 
 .btn-primary {
-    background: var(--gold);
-    color: #111;
-    border-color: var(--gold);
+    background: var(--raid-blue);
+    color: #ffffff;
+    border-color: var(--raid-blue-light);
 }
 
 .btn-primary:hover {
-    background: var(--gold-light);
+    background: var(--raid-blue-light);
 }
 
 .btn-danger {
-    color: #fff;
+    color: #ffffff;
     border-color: var(--red);
 }
 
@@ -189,13 +189,36 @@ button {
 }
 
 .bingo-wrapper {
+    position: relative;
+    overflow: hidden;
     background: #090b10;
     padding: 10px;
     border-radius: 12px;
     border: 1px solid var(--border);
 }
 
+.bingo-wrapper::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("images/boss.jpg");
+    background-size: cover;
+    background-position: center;
+    opacity: 0.25;
+    filter: saturate(0.8);
+}
+
+.bingo-wrapper::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(5, 9, 16, 0.55);
+    pointer-events: none;
+}
+
 .bingo-card {
+    position: relative;
+    z-index: 1;
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     aspect-ratio: 1 / 1;
@@ -209,7 +232,7 @@ button {
     justify-content: center;
     text-align: center;
     padding: 8px;
-    background: var(--card);
+    background: rgba(20, 28, 43, 0.88);
     border: 1px solid var(--border);
     color: var(--text);
     font-size: clamp(0.65rem, 1.7vw, 0.95rem);
@@ -217,17 +240,19 @@ button {
     line-height: 1.2;
     cursor: pointer;
     user-select: none;
-    transition: background 0.15s ease, transform 0.15s ease;
+    transition: background 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
 }
 
 .bingo-square:hover {
-    background: var(--card-hover);
+    background: rgba(27, 38, 57, 0.94);
+    border-color: var(--raid-blue-light);
 }
 
 .bingo-square.marked {
-    background: var(--gold);
-    color: #111;
-    border-color: var(--gold-light);
+    background: var(--raid-blue);
+    color: #ffffff;
+    border-color: var(--raid-blue-light);
+    box-shadow: inset 0 0 0 1px var(--raid-blue-light);
 }
 
 .bingo-square.marked::after {
@@ -235,6 +260,7 @@ button {
     position: absolute;
     top: 4px;
     right: 7px;
+    color: #6fa9dc;
     font-size: 1rem;
     font-weight: 900;
 }
@@ -247,7 +273,7 @@ button {
 
 .bingo-message {
     margin-top: 10px;
-    color: var(--gold-light);
+    color: #8ab8e3;
     font-weight: 800;
     font-size: 1.3rem;
 }
@@ -264,7 +290,7 @@ button {
 }
 
 .selection-count strong {
-    color: var(--gold-light);
+    color: #8ab8e3;
 }
 
 .item-list {
@@ -285,18 +311,18 @@ button {
 }
 
 .item-option:hover {
-    border-color: var(--gold);
+    border-color: var(--raid-blue-light);
 }
 
 .item-option.selected {
-    background: #272518;
-    border-color: var(--gold);
+    background: #12243a;
+    border-color: var(--raid-blue-light);
 }
 
 .item-option input {
     width: 18px;
     height: 18px;
-    accent-color: var(--gold);
+    accent-color: var(--raid-blue-light);
 }
 
 .custom-grid {
@@ -316,7 +342,7 @@ button {
 }
 
 .custom-input:focus {
-    border-color: var(--gold);
+    border-color: var(--raid-blue-light);
 }
 
 @media (max-width: 800px) {
