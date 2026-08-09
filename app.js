@@ -26,6 +26,17 @@ function getRandomItems(items, amount) {
     return shuffle(items).slice(0, amount);
 }
 
+function createCard() {
+    const card = getRandomItems(
+        bingoItems.filter(item => item !== "LURA DIES"),
+        24
+    );
+
+    card.splice(12, 0, "LURA DIES");
+
+    return card;
+}
+
 function saveJSON(key, value) {
     localStorage.setItem(key, JSON.stringify(value));
 }
@@ -128,7 +139,7 @@ function initRandomCard() {
     let marked = loadJSON(STORAGE_KEYS.randomMarked, []);
 
     if (!card) {
-        card = getRandomItems(bingoItems, 25);
+        card = createCard();
         marked = [];
 
         saveJSON(STORAGE_KEYS.randomCard, card);
@@ -143,7 +154,7 @@ function initRandomCard() {
     );
 
     document.getElementById("rerollButton")?.addEventListener("click", () => {
-        const newCard = getRandomItems(bingoItems, 25);
+        const newCard = createCard();
         const newMarked = [];
 
         saveJSON(STORAGE_KEYS.randomCard, newCard);
