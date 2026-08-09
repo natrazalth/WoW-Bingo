@@ -23,5 +23,4 @@ const bingoItems = [
     "Streamer does P4 practice tool",
     "Missing 3+ raid buffs",
     "Bar button clicker (memory game excluded)",
-    "LURA DIES"
 ];
