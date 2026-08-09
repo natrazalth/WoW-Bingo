@@ -28,11 +28,65 @@ function getRandomItems(items, amount) {
 
 function createCard() {
     const availableItems = bingoItems.filter(item => item !== "LURA DIES");
-    const card = getRandomItems(availableItems, 24);
+    const shuffled = shuffle(availableItems);
+    const card = [];
 
-    card.splice(12, 0, "LURA DIES");
+    for (let i = 0; i < 25; i++) {
+        if (i === 12) {
+            card.push("LURA DIES");
+        } else {
+            card.push(shuffled.shift());
+        }
+    }
 
     return card;
+}
+
+function createCardFromItems(items) {
+    const uniqueItems = [];
+    const seen = new Set();
+
+    items.forEach(item => {
+        const normalized = item.trim().toLowerCase();
+
+        if (
+            item.trim() !== "" &&
+            normalized !== "lura dies" &&
+            !seen.has(normalized)
+        ) {
+            seen.add(normalized);
+            uniqueItems.push(item.trim());
+        }
+    });
+
+    if (uniqueItems.length !== 24) {
+        return null;
+    }
+
+    const card = [];
+    let itemIndex = 0;
+
+    for (let i = 0; i < 25; i++) {
+        if (i === 12) {
+            card.push("LURA DIES");
+        } else {
+            card.push(uniqueItems[itemIndex]);
+            itemIndex++;
+        }
+    }
+
+    return card;
+}
+
+function isValidCard(card) {
+    return (
+        Array.isArray(card) &&
+        card.length === 25 &&
+        card[12] === "LURA DIES" &&
+        new Set(
+            card.map(item => item.trim().toLowerCase())
+        ).size === 25
+    );
 }
 
 function saveJSON(key, value) {
@@ -136,7 +190,7 @@ function initRandomCard() {
     let card = loadJSON(STORAGE_KEYS.randomCard);
     let marked = loadJSON(STORAGE_KEYS.randomMarked, []);
 
-    if (!card || card.length !== 25 || card[12] !== "LURA DIES") {
+    if (!isValidCard(card)) {
         card = createCard();
         marked = [];
 
@@ -191,7 +245,21 @@ function initChooseCard() {
 
     let savedCard = loadJSON(STORAGE_KEYS.chooseCard, []);
 
-    bingoItems.forEach(item => {
+    if (isValidCard(savedCard)) {
+        savedCard = savedCard.filter((item, index) => index !== 12);
+    } else {
+        savedCard = savedCard.filter(item =>
+            item.trim().toLowerCase() !== "lura dies"
+        );
+    }
+
+    savedCard = savedCard.slice(0, 24);
+
+    const availableItems = bingoItems.filter(
+        item => item.trim().toLowerCase() !== "lura dies"
+    );
+
+    availableItems.forEach(item => {
         const label = document.createElement("label");
         const checkbox = document.createElement("input");
         const text = document.createElement("span");
@@ -208,7 +276,7 @@ function initChooseCard() {
 
         checkbox.addEventListener("change", () => {
             if (checkbox.checked) {
-                if (savedCard.length >= 25) {
+                if (savedCard.length >= 24) {
                     checkbox.checked = false;
                     return;
                 }
@@ -230,9 +298,9 @@ function initChooseCard() {
             updateSelectionCount();
         });
 
+        list.appendChild(label);
         label.appendChild(checkbox);
         label.appendChild(text);
-        list.appendChild(label);
     });
 
     function updateSelectionCount() {
@@ -240,25 +308,37 @@ function initChooseCard() {
         const generate = document.getElementById("generateButton");
 
         if (count) {
-            count.textContent = `${savedCard.length} / 25 selected`;
+            count.textContent = `${savedCard.length} / 24 selected`;
         }
 
         if (generate) {
-            generate.disabled = savedCard.length !== 25;
+            generate.disabled = savedCard.length !== 24;
         }
     }
 
     updateSelectionCount();
 
     document.getElementById("generateButton")?.addEventListener("click", () => {
-        if (savedCard.length !== 25) {
-            alert("Please select exactly 25 squares.");
+        if (savedCard.length !== 24) {
+            alert("Please select exactly 24 squares.");
+            return;
+        }
+
+        const card = createCardFromItems(savedCard);
+
+        if (!card) {
+            alert("Your card contains duplicate squares.");
             return;
         }
 
         saveJSON(
             STORAGE_KEYS.chooseCard,
-            savedCard
+            card
+        );
+
+        saveJSON(
+            STORAGE_KEYS.chooseMarked,
+            []
         );
 
         window.location.href = "ChooseCard.html?card=1";
@@ -266,23 +346,47 @@ function initChooseCard() {
 
     const params = new URLSearchParams(window.location.search);
 
-    if (params.get("card") === "1" && savedCard.length === 25) {
-        document.getElementById("selectionArea")?.classList.add("hidden");
-        document.getElementById("generatedArea")?.classList.remove("hidden");
-
-        const marked = loadJSON(
-            STORAGE_KEYS.chooseMarked,
+    if (params.get("card") === "1") {
+        const storedItems = loadJSON(
+            STORAGE_KEYS.chooseCard,
             []
         );
 
-        renderCard(
-            savedCard,
-            marked,
-            document.getElementById("generatedCard"),
-            STORAGE_KEYS.chooseMarked
-        );
+        let generatedCard = storedItems;
 
-        initGeneratedCardControls();
+        if (!isValidCard(generatedCard)) {
+            const items = generatedCard.filter(
+                item => item.trim().toLowerCase() !== "lura dies"
+            );
+
+            generatedCard = createCardFromItems(items);
+
+            if (generatedCard) {
+                saveJSON(
+                    STORAGE_KEYS.chooseCard,
+                    generatedCard
+                );
+            }
+        }
+
+        if (generatedCard && isValidCard(generatedCard)) {
+            document.getElementById("selectionArea")?.classList.add("hidden");
+            document.getElementById("generatedArea")?.classList.remove("hidden");
+
+            const marked = loadJSON(
+                STORAGE_KEYS.chooseMarked,
+                []
+            );
+
+            renderCard(
+                generatedCard,
+                marked,
+                document.getElementById("generatedCard"),
+                STORAGE_KEYS.chooseMarked
+            );
+
+            initGeneratedCardControls();
+        }
     }
 }
 
@@ -323,23 +427,47 @@ function initCustomCard() {
         []
     );
 
-    savedCard.forEach((value, index) => {
-        if (inputs[index]) {
-            inputs[index].value = value;
-        }
-    });
+    if (savedCard.length === 25 && savedCard[12] === "LURA DIES") {
+        let inputIndex = 0;
+
+        inputs.forEach((input, index) => {
+            if (index === 12) {
+                input.value = "LURA DIES";
+                input.disabled = true;
+                input.placeholder = "LURA DIES";
+            } else {
+                if (savedCard[inputIndex]) {
+                    input.value = savedCard[inputIndex];
+                }
+
+                inputIndex++;
+            }
+        });
+    } else {
+        inputs.forEach((input, index) => {
+            if (index === 12) {
+                input.value = "LURA DIES";
+                input.disabled = true;
+                input.placeholder = "LURA DIES";
+            }
+        });
+    }
 
     form.addEventListener("submit", event => {
         event.preventDefault();
 
-        const values = inputs.map(input => input.value.trim());
+        const values = inputs
+            .filter((input, index) => index !== 12)
+            .map(input => input.value.trim());
 
         if (values.some(value => value === "")) {
-            alert("Please fill in all 25 squares.");
+            alert("Please fill in all 24 custom squares.");
             return;
         }
 
-        const normalized = values.map(value => value.toLowerCase());
+        const normalized = values.map(
+            value => value.toLowerCase()
+        );
 
         const hasDuplicates = normalized.some(
             (value, index) => normalized.indexOf(value) !== index
@@ -350,9 +478,16 @@ function initCustomCard() {
             return;
         }
 
+        const card = createCardFromItems(values);
+
+        if (!card) {
+            alert("Your card contains duplicate squares.");
+            return;
+        }
+
         saveJSON(
             STORAGE_KEYS.customCard,
-            values
+            card
         );
 
         saveJSON(
@@ -365,18 +500,40 @@ function initCustomCard() {
 
     const params = new URLSearchParams(window.location.search);
 
-    if (params.get("card") === "1" && savedCard.length === 25) {
-        form.classList.add("hidden");
-        document.getElementById("generatedArea")?.classList.remove("hidden");
-
-        renderCard(
-            savedCard,
-            loadJSON(STORAGE_KEYS.customMarked, []),
-            document.getElementById("generatedCard"),
-            STORAGE_KEYS.customMarked
+    if (params.get("card") === "1") {
+        let generatedCard = loadJSON(
+            STORAGE_KEYS.customCard,
+            []
         );
 
-        initCustomGeneratedControls();
+        if (!isValidCard(generatedCard)) {
+            const items = generatedCard.filter(
+                item => item.trim().toLowerCase() !== "lura dies"
+            );
+
+            generatedCard = createCardFromItems(items);
+
+            if (generatedCard) {
+                saveJSON(
+                    STORAGE_KEYS.customCard,
+                    generatedCard
+                );
+            }
+        }
+
+        if (generatedCard && isValidCard(generatedCard)) {
+            form.classList.add("hidden");
+            document.getElementById("generatedArea")?.classList.remove("hidden");
+
+            renderCard(
+                generatedCard,
+                loadJSON(STORAGE_KEYS.customMarked, []),
+                document.getElementById("generatedCard"),
+                STORAGE_KEYS.customMarked
+            );
+
+            initCustomGeneratedControls();
+        }
     }
 }
 
