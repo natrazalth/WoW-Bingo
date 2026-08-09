@@ -3,50 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Choose Your Bingo Card</title>
+    <title>Lura RWL Bingo</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="card-page">
+
     <main class="card-container">
+
         <header class="page-header">
             <h1>Lura RWL Bingo</h1>
-            <p>Select 25 Variant. Saved Automatically.</p>
+            <p>Selected 25 Variant. Automatically Saves.</p>
         </header>
 
         <section id="selectionArea">
-            <div class="controls">
-                <a href="index.html" class="btn">← Go Back</a>
-                <button id="generateButton" class="btn btn-primary" disabled>Generate Card</button>
-            </div>
 
-            <div class="selection-count" id="selectionCount">0 / 25 selected</div>
+            <div class="drag-layout">
 
-            <div class="selection-container">
-                <div id="itemList" class="item-list"></div>
+                <div class="available-container">
+                    <h2>Available Squares</h2>
+                    <p class="drag-help">
+                        Drag a square onto your card.
+                    </p>
+
+                    <div id="itemList" class="item-list"></div>
+                </div>
+
+                <div class="setup-container">
+
+                    <h2>Your Card</h2>
+                    <div class="bingo-wrapper">
+                        <div id="setupCard" class="bingo-card"></div>
+                    </div>
+                    <div id="selectionCount" class="selection-count">
+                        0 / 24 Squares Placed
+                    </div>
+                    <div class="controls">
+                        <button
+                            id="enableCardButton"
+                            class="btn btn-primary"
+                            disabled
+                        >
+                            Enable Card
+                        </button>
+                        <a
+                            href="index.html"
+                            class="btn"
+                        >
+                            Go Back
+                        </a>
+                    </div>
+                </div>
             </div>
         </section>
 
         <section id="generatedArea" class="hidden">
-            <div class="controls">
-                <a href="index.html" class="btn">← Go Back</a>
-                <button id="backToChoose" class="btn">✏️ Change Squares</button>
-                <button id="shareButton" class="btn">📋 Share Card</button>
-                <button id="resetButton" class="btn btn-danger">Reset Card</button>
-            </div>
-
             <div class="bingo-wrapper">
                 <div id="generatedCard" class="bingo-card"></div>
             </div>
+            <div class="bingo-message"></div>
 
-            <div class="card-status">
-                Click squares to mark them.
-                <div class="bingo-message"></div>
+            <div class="controls">
+                <button
+                    id="shareButton"
+                    class="btn btn-primary"
+                >
+                    Share Card
+                </button>
+                <button
+                    id="resetButton"
+                    class="btn btn-danger"
+                >
+                    Reset Card
+                </button>
+                <a
+                    href="index.html"
+                    class="btn"
+                >
+                    Go Back
+                </a>
             </div>
         </section>
     </main>
-
     <script src="bingo-data.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
