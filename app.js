@@ -238,155 +238,252 @@ function initRandomCard() {
 
 function initChooseCard() {
     const list = document.getElementById("itemList");
+    const setupCard = document.getElementById("setupCard");
 
-    if (!list) {
+    if (!list || !setupCard) {
         return;
     }
 
     let savedCard = loadJSON(STORAGE_KEYS.chooseCard, []);
 
-    if (isValidCard(savedCard)) {
-        savedCard = savedCard.filter((item, index) => index !== 12);
-    } else {
-        savedCard = savedCard.filter(item =>
-            item.trim().toLowerCase() !== "lura dies"
+    if (
+        Array.isArray(savedCard) &&
+        savedCard.length === 25 &&
+        savedCard[12] === "LURA DIES"
+    ) {
+        savedCard = savedCard.filter(
+            (item, index) => index !== 12
         );
     }
+    let enabled = loadJSON("wowBingo_chooseEnabled", false);
 
-    savedCard = savedCard.slice(0, 24);
+    if (!Array.isArray(savedCard)) {
+        savedCard = [];
+    }
 
-    const availableItems = bingoItems.filter(
+    if (savedCard.length === 25 && savedCard[12] === "LURA DIES") {
+        savedCard = savedCard.filter((item, index) => index !== 12);
+    }
+
+    savedCard = savedCard.filter(
         item => item.trim().toLowerCase() !== "lura dies"
     );
 
-    availableItems.forEach(item => {
-        const label = document.createElement("label");
-        const checkbox = document.createElement("input");
-        const text = document.createElement("span");
+    savedCard = savedCard.slice(0, 24);
 
-        label.className = "item-option";
-        checkbox.type = "checkbox";
-        checkbox.value = item;
-        checkbox.checked = savedCard.includes(item);
-        text.textContent = item;
+    function renderSetupCard() {
+        setupCard.innerHTML = "";
 
-        if (checkbox.checked) {
-            label.classList.add("selected");
-        }
+        for (let i = 0; i < 25; i++) {
+            const square = document.createElement("div");
 
-        checkbox.addEventListener("change", () => {
-            if (checkbox.checked) {
-                if (savedCard.length >= 24) {
-                    checkbox.checked = false;
-                    return;
-                }
+            square.className = "setup-square";
 
-                if (!savedCard.includes(item)) {
-                    savedCard.push(item);
-                }
+            if (i === 12) {
+                square.classList.add("center-square");
+                square.textContent = "LURA DIES";
             } else {
-                savedCard = savedCard.filter(value => value !== item);
+                const itemIndex = i > 12 ? i - 1 : i;
+                const item = savedCard[itemIndex];
+
+                if (item) {
+                    square.classList.add("filled");
+                    square.textContent = item;
+                    square.dataset.index = itemIndex;
+
+                    if (!enabled) {
+                        square.addEventListener("click", () => {
+                            const index = Number(square.dataset.index);
+
+                            savedCard.splice(index, 1);
+
+                            saveJSON(
+                                STORAGE_KEYS.chooseCard,
+                                savedCard
+                            );
+
+                            renderSetupCard();
+                            renderAvailableItems();
+                            updateSelectionCount();
+                        });
+                    }
+                } else {
+                    square.textContent = "Drop Here";
+                    square.dataset.index = i;
+
+                    if (!enabled) {
+                        square.addEventListener("dragover", event => {
+                            event.preventDefault();
+                            square.classList.add("drop-hover");
+                        });
+
+                        square.addEventListener("dragleave", () => {
+                            square.classList.remove("drop-hover");
+                        });
+
+                        square.addEventListener("drop", event => {
+                            event.preventDefault();
+
+                            square.classList.remove("drop-hover");
+
+                            const item = event.dataTransfer.getData("text/plain");
+
+                            if (!item) {
+                                return;
+                            }
+
+                            if (
+                                savedCard.some(
+                                    value =>
+                                        value.toLowerCase() === item.toLowerCase()
+                                )
+                            ) {
+                                return;
+                            }
+
+                            const position = i > 12 ? i - 1 : i;
+
+                            savedCard.splice(position, 0, item);
+
+                            saveJSON(
+                                STORAGE_KEYS.chooseCard,
+                                savedCard
+                            );
+
+                            renderSetupCard();
+                            renderAvailableItems();
+                            updateSelectionCount();
+                        });
+                    }
+                }
             }
 
-            label.classList.toggle("selected", checkbox.checked);
-
-            saveJSON(
-                STORAGE_KEYS.chooseCard,
-                savedCard
-            );
-
-            updateSelectionCount();
-        });
-
-        list.appendChild(label);
-        label.appendChild(checkbox);
-        label.appendChild(text);
-    });
-
-    function updateSelectionCount() {
-        const count = document.getElementById("selectionCount");
-        const generate = document.getElementById("generateButton");
-
-        if (count) {
-            count.textContent = `${savedCard.length} / 24 selected`;
-        }
-
-        if (generate) {
-            generate.disabled = savedCard.length !== 24;
+            setupCard.appendChild(square);
         }
     }
 
+    function renderAvailableItems() {
+        list.innerHTML = "";
+
+        bingoItems
+            .filter(
+                item =>
+                    item.trim().toLowerCase() !== "lura dies"
+            )
+            .forEach(item => {
+                const div = document.createElement("div");
+
+                div.className = "drag-item";
+                div.textContent = item;
+                div.draggable = !enabled;
+
+                const used = savedCard.some(
+                    value =>
+                        value.toLowerCase() === item.toLowerCase()
+                );
+
+                if (used) {
+                    div.classList.add("used");
+                }
+
+                if (!enabled) {
+                    div.addEventListener("dragstart", event => {
+                        event.dataTransfer.setData(
+                            "text/plain",
+                            item
+                        );
+                    });
+                }
+
+                list.appendChild(div);
+            });
+    }
+
+    function updateSelectionCount() {
+        const count = document.getElementById("selectionCount");
+        const enableButton = document.getElementById("enableCardButton");
+
+        if (count) {
+            count.textContent = `${savedCard.length} / 24 Squares Placed`;
+        }
+
+        if (enableButton) {
+            enableButton.disabled =
+                savedCard.length !== 24 || enabled;
+
+            enableButton.textContent =
+                enabled ? "Card Enabled" : "Enable Card";
+        }
+    }
+
+    renderSetupCard();
+    renderAvailableItems();
     updateSelectionCount();
 
-    document.getElementById("generateButton")?.addEventListener("click", () => {
-        if (savedCard.length !== 24) {
-            alert("Please select exactly 24 squares.");
-            return;
-        }
+    document
+        .getElementById("enableCardButton")
+        ?.addEventListener("click", () => {
+            if (savedCard.length !== 24) {
+                alert("Please place all 24 squares first.");
+                return;
+            }
 
-        const card = createCardFromItems(savedCard);
+            const card = createCardFromItems(savedCard);
 
-        if (!card) {
-            alert("Your card contains duplicate squares.");
-            return;
-        }
+            if (!card) {
+                alert("Your card contains duplicate squares.");
+                return;
+            }
 
-        saveJSON(
-            STORAGE_KEYS.chooseCard,
-            card
-        );
+            enabled = true;
 
-        saveJSON(
-            STORAGE_KEYS.chooseMarked,
-            []
-        );
-
-        window.location.href = "ChooseCard.html?card=1";
-    });
-
-    const params = new URLSearchParams(window.location.search);
-
-    if (params.get("card") === "1") {
-        const storedItems = loadJSON(
-            STORAGE_KEYS.chooseCard,
-            []
-        );
-
-        let generatedCard = storedItems;
-
-        if (!isValidCard(generatedCard)) {
-            const items = generatedCard.filter(
-                item => item.trim().toLowerCase() !== "lura dies"
+            saveJSON(
+                STORAGE_KEYS.chooseCard,
+                card
             );
 
-            generatedCard = createCardFromItems(items);
-
-            if (generatedCard) {
-                saveJSON(
-                    STORAGE_KEYS.chooseCard,
-                    generatedCard
-                );
-            }
-        }
-
-        if (generatedCard && isValidCard(generatedCard)) {
-            document.getElementById("selectionArea")?.classList.add("hidden");
-            document.getElementById("generatedArea")?.classList.remove("hidden");
-
-            const marked = loadJSON(
+            saveJSON(
                 STORAGE_KEYS.chooseMarked,
                 []
             );
 
-            renderCard(
-                generatedCard,
-                marked,
-                document.getElementById("generatedCard"),
-                STORAGE_KEYS.chooseMarked
+            saveJSON(
+                "wowBingo_chooseEnabled",
+                true
             );
 
-            initGeneratedCardControls();
-        }
+            window.location.href = "ChooseCard.html?card=1";
+        });
+
+    const params = new URLSearchParams(
+        window.location.search
+    );
+
+    if (
+        params.get("card") === "1" &&
+        isValidCard(savedCard)
+    ) {
+        document
+            .getElementById("selectionArea")
+            ?.classList.add("hidden");
+
+        document
+            .getElementById("generatedArea")
+            ?.classList.remove("hidden");
+
+        const marked = loadJSON(
+            STORAGE_KEYS.chooseMarked,
+            []
+        );
+
+        renderCard(
+            savedCard,
+            marked,
+            document.getElementById("generatedCard"),
+            STORAGE_KEYS.chooseMarked
+        );
+
+        initGeneratedCardControls();
     }
 }
 
