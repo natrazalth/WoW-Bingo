@@ -27,10 +27,8 @@ function getRandomItems(items, amount) {
 }
 
 function createCard() {
-    const card = getRandomItems(
-        bingoItems.filter(item => item !== "LURA DIES"),
-        24
-    );
+    const availableItems = bingoItems.filter(item => item !== "LURA DIES");
+    const card = getRandomItems(availableItems, 24);
 
     card.splice(12, 0, "LURA DIES");
 
@@ -138,7 +136,7 @@ function initRandomCard() {
     let card = loadJSON(STORAGE_KEYS.randomCard);
     let marked = loadJSON(STORAGE_KEYS.randomMarked, []);
 
-    if (!card) {
+    if (!card || card.length !== 25 || card[12] !== "LURA DIES") {
         card = createCard();
         marked = [];
 
