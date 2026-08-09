@@ -1103,10 +1103,12 @@ function initCustomGeneratedControls() {
 }
 
 async function shareCard() {
-    const card = document.getElementById("bingoCard");
+    const card =
+        document.querySelector(".generated-wrapper") ||
+        document.querySelector(".bingo-wrapper");
 
     if (!card) {
-        console.error("Share error: #bingoCard not found.");
+        console.error("Share error: no bingo card wrapper found.");
         alert("Couldn't find the bingo card.");
         return;
     }
@@ -1128,17 +1130,13 @@ async function shareCard() {
             logging: true
         });
 
-        console.log("Canvas created:", canvas);
-
         const blob = await new Promise(resolve => {
             canvas.toBlob(resolve, "image/png");
         });
 
         if (!blob) {
-            throw new Error("Canvas.toBlob() returned null.");
+            throw new Error("Could not create image blob.");
         }
-
-        console.log("PNG created:", blob);
 
         if (
             navigator.clipboard &&
@@ -1182,10 +1180,7 @@ async function shareCard() {
         );
 
     } catch (error) {
-        console.error(
-            "FULL SHARE ERROR:",
-            error
-        );
+        console.error("FULL SHARE ERROR:", error);
 
         alert(
             "Couldn't create the card image. Check the browser console for the error."
