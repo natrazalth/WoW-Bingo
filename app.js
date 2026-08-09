@@ -1103,49 +1103,27 @@ function initCustomGeneratedControls() {
 }
 
 async function shareCard() {
-    const card =
-        document.querySelector(
-            ".bingo-wrapper"
-        );
+    const card = document.querySelector("#generatedArea .bingo-wrapper");
 
-    if (
-        !card ||
-        typeof html2canvas ===
-            "undefined"
-    ) {
-        alert(
-            "Couldn't create the card image."
-        );
-
+    if (!card || typeof html2canvas === "undefined") {
+        alert("Couldn't create the card image.");
         return;
     }
 
     try {
-        const canvas =
-            await html2canvas(
-                card,
-                {
-                    backgroundColor:
-                        "#090b10",
-                    scale: 2,
-                    useCORS: true,
-                    allowTaint: false
-                }
-            );
+        const canvas = await html2canvas(card, {
+            backgroundColor: "#090b10",
+            scale: 2,
+            useCORS: true,
+            allowTaint: false
+        });
 
-        const blob =
-            await new Promise(
-                resolve =>
-                    canvas.toBlob(
-                        resolve,
-                        "image/png"
-                    )
-            );
+        const blob = await new Promise(resolve =>
+            canvas.toBlob(resolve, "image/png")
+        );
 
         if (!blob) {
-            throw new Error(
-                "Could not create image blob."
-            );
+            throw new Error("Could not create image blob.");
         }
 
         if (
@@ -1154,62 +1132,34 @@ async function shareCard() {
             window.isSecureContext
         ) {
             try {
-                await navigator.clipboard.write(
-                    [
-                        new ClipboardItem(
-                            {
-                                "image/png":
-                                    blob
-                            }
-                        )
-                    ]
-                );
+                await navigator.clipboard.write([
+                    new ClipboardItem({
+                        "image/png": blob
+                    })
+                ]);
 
-                alert(
-                    "Card image copied to clipboard!"
-                );
-
+                alert("Card image copied to clipboard!");
                 return;
             } catch (error) {
-                console.error(
-                    "Clipboard failed:",
-                    error
-                );
+                console.error("Clipboard failed:", error);
             }
         }
 
-        const link =
-            document.createElement(
-                "a"
-            );
-
-        link.download =
-            "wow-bingo-card.png";
-
-        link.href =
-            URL.createObjectURL(
-                blob
-            );
-
+        const link = document.createElement("a");
+        link.download = "wow-bingo-card.png";
+        link.href = URL.createObjectURL(blob);
         link.click();
 
         setTimeout(() => {
-            URL.revokeObjectURL(
-                link.href
-            );
+            URL.revokeObjectURL(link.href);
         }, 1000);
 
         alert(
             "Your browser doesn't allow direct image copying, so the card was downloaded instead."
         );
     } catch (error) {
-        console.error(
-            error
-        );
-
-        alert(
-            "Couldn't create the card image."
-        );
+        console.error(error);
+        alert("Couldn't create the card image.");
     }
 }
 
