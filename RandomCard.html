@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Bingo Card</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="card-page">
+    <main class="card-container">
+        <header class="page-header">
+            <h1>Random Bingo Card</h1>
+            <p>Your card is saved automatically. Reroll whenever you want a new one.</p>
+        </header>
+
+        <div class="controls">
+            <a href="index.html" class="btn">← Go Back</a>
+            <button id="rerollButton" class="btn btn-primary">🎲 Reroll Card</button>
+            <button id="shareButton" class="btn">📋 Share Card</button>
+            <button id="resetButton" class="btn btn-danger">Reset Card</button>
+        </div>
+
+        <div class="bingo-wrapper">
+            <div id="bingoCard" class="bingo-card"></div>
+        </div>
+
+        <div class="card-status">
+            Click squares to mark them.
+            <div class="bingo-message"></div>
+        </div>
+    </main>
+
+    <script src="bingo-data.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
