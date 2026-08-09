@@ -573,3 +573,14 @@ button {
         width: 90%;
     }
 }
+
+.credits {
+    margin-top: 35px;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #888;
+}
+
+.credits strong {
+    color: #aaa;
+}
