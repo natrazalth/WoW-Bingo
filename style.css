@@ -1,0 +1,357 @@
+* {
+    box-sizing: border-box;
+}
+
+:root {
+    --bg: #0d0f14;
+    --bg-secondary: #151923;
+    --card: #1b202c;
+    --card-hover: #252c3b;
+    --gold: #d8a83e;
+    --gold-light: #f1cb68;
+    --text: #f4f4f4;
+    --muted: #9da4b3;
+    --border: #343b4c;
+    --green: #45c878;
+    --red: #d95757;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+}
+
+body {
+    background: radial-gradient(circle at top, #1a2030 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button,
+a {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.home-page {
+    min-height: 100vh;
+}
+
+.home-container {
+    width: min(1100px, 92%);
+    margin: 0 auto;
+    padding: 70px 0;
+}
+
+.site-header {
+    text-align: center;
+    margin-bottom: 55px;
+}
+
+.site-header h1 {
+    margin: 0 0 15px;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    color: var(--gold-light);
+    letter-spacing: -1px;
+}
+
+.site-header p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 1.1rem;
+}
+
+.mode-selection {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 25px;
+}
+
+.mode-card {
+    display: flex;
+    flex-direction: column;
+    padding: 35px 30px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    text-decoration: none;
+    color: var(--text);
+    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.mode-card:hover {
+    transform: translateY(-5px);
+    background: var(--card-hover);
+    border-color: var(--gold);
+}
+
+.mode-icon {
+    font-size: 3rem;
+    margin-bottom: 20px;
+}
+
+.mode-card h2 {
+    margin: 0 0 12px;
+    color: var(--gold-light);
+}
+
+.mode-card p {
+    color: var(--muted);
+    line-height: 1.6;
+    flex: 1;
+}
+
+.mode-button {
+    display: inline-block;
+    margin-top: 25px;
+    padding: 12px 18px;
+    border-radius: 8px;
+    text-align: center;
+    background: var(--gold);
+    color: #111;
+    font-weight: 700;
+}
+
+.card-page {
+    min-height: 100vh;
+    padding: 30px 15px 60px;
+}
+
+.card-container {
+    width: min(900px, 100%);
+    margin: 0 auto;
+}
+
+.page-header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.page-header h1 {
+    color: var(--gold-light);
+    margin-bottom: 8px;
+}
+
+.page-header p {
+    color: var(--muted);
+}
+
+.controls {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.btn {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 11px 18px;
+    background: var(--card);
+    color: var(--text);
+    font-weight: 600;
+    transition: 0.2s ease;
+    text-decoration: none;
+}
+
+.btn:hover {
+    background: var(--card-hover);
+    border-color: var(--gold);
+}
+
+.btn-primary {
+    background: var(--gold);
+    color: #111;
+    border-color: var(--gold);
+}
+
+.btn-primary:hover {
+    background: var(--gold-light);
+}
+
+.btn-danger {
+    color: #fff;
+    border-color: var(--red);
+}
+
+.btn-danger:hover {
+    background: var(--red);
+}
+
+.bingo-wrapper {
+    background: #090b10;
+    padding: 10px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+}
+
+.bingo-card {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    aspect-ratio: 1 / 1;
+    gap: 5px;
+}
+
+.bingo-square {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 8px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: clamp(0.65rem, 1.7vw, 0.95rem);
+    font-weight: 600;
+    line-height: 1.2;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.bingo-square:hover {
+    background: var(--card-hover);
+}
+
+.bingo-square.marked {
+    background: var(--gold);
+    color: #111;
+    border-color: var(--gold-light);
+}
+
+.bingo-square.marked::after {
+    content: "✓";
+    position: absolute;
+    top: 4px;
+    right: 7px;
+    font-size: 1rem;
+    font-weight: 900;
+}
+
+.card-status {
+    text-align: center;
+    margin-top: 18px;
+    color: var(--muted);
+}
+
+.bingo-message {
+    margin-top: 10px;
+    color: var(--gold-light);
+    font-weight: 800;
+    font-size: 1.3rem;
+}
+
+.selection-container {
+    margin-top: 30px;
+}
+
+.selection-count {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 1.1rem;
+    color: var(--muted);
+}
+
+.selection-count strong {
+    color: var(--gold-light);
+}
+
+.item-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.item-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.item-option:hover {
+    border-color: var(--gold);
+}
+
+.item-option.selected {
+    background: #272518;
+    border-color: var(--gold);
+}
+
+.item-option input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--gold);
+}
+
+.custom-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.custom-input {
+    width: 100%;
+    padding: 14px;
+    background: var(--card);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    outline: none;
+}
+
+.custom-input:focus {
+    border-color: var(--gold);
+}
+
+@media (max-width: 800px) {
+    .mode-selection,
+    .item-list,
+    .custom-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 550px) {
+    .card-page {
+        padding-left: 5px;
+        padding-right: 5px;
+    }
+
+    .bingo-wrapper {
+        padding: 4px;
+    }
+
+    .bingo-card {
+        gap: 2px;
+    }
+
+    .bingo-square {
+        padding: 4px;
+        font-size: 0.62rem;
+    }
+
+    .controls {
+        gap: 6px;
+    }
+
+    .btn {
+        padding: 9px 12px;
+        font-size: 0.85rem;
+    }
+}
